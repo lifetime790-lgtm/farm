@@ -203,7 +203,8 @@
 
   <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
   <script src="./app-config.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     const KEY = "farm-journal-entries-v1";
     const MAX = 4;
@@ -885,6 +886,53 @@
       return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
+    function createPdfCaptureTarget() {
+      const node = document.createElement("section");
+      node.className = "pdf-report";
+      node.innerHTML = refs.pdfReport.innerHTML;
+      node.style.position = "fixed";
+      node.style.left = "0";
+      node.style.top = "0";
+      node.style.width = "794px";
+      node.style.background = "#ffffff";
+      node.style.zIndex = "2147483647";
+      node.style.opacity = "1";
+      node.style.visibility = "visible";
+      node.style.pointerEvents = "none";
+      node.style.overflow = "visible";
+      document.body.appendChild(node);
+      return node;
+    }
+
+    function buildPdfFromCanvas(canvas, filename) {
+      const JsPdf = window.jspdf && window.jspdf.jsPDF ? window.jspdf.jsPDF : null;
+      if (!JsPdf) {
+        throw new Error("jspdf_not_loaded");
+      }
+
+      const pdf = new JsPdf({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imageWidth = pageWidth;
+      const imageHeight = (canvas.height * imageWidth) / canvas.width;
+      const imageData = canvas.toDataURL("image/png", 1.0);
+
+      let heightLeft = imageHeight;
+      let position = 0;
+
+      pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight, undefined, "FAST");
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imageHeight;
+        pdf.addPage();
+        pdf.addImage(imageData, "PNG", 0, position, imageWidth, imageHeight, undefined, "FAST");
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(filename);
+    }
+
     async function exportPdf() {
       const startDate = refs.pdfStart.value;
       const endDate = refs.pdfEnd.value;
@@ -897,7 +945,7 @@
         alert("종료일은 시작일보다 빠를 수 없습니다.");
         return;
       }
-      if (typeof window.html2pdf === "undefined") {
+      if (typeof window.html2canvas === "undefined" || !(window.jspdf && window.jspdf.jsPDF)) {
         alert("PDF 엔진을 불러오지 못했습니다. 네트워크를 확인해 주세요.");
         return;
       }
@@ -912,40 +960,38 @@
       buildPdfReport(list, startDate, endDate);
 
       const filename = "farm-journal-" + startDate + "-to-" + endDate + ".pdf";
-      const options = {
-        filename,
-        margin: [6, 6, 6, 6],
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"] },
-      };
-
-      const target = refs.pdfReport;
-      const prevStyle = target.getAttribute("style");
+      let captureNode = null;
       try {
-        target.style.position = "fixed";
-        target.style.left = "0";
-        target.style.top = "0";
-        target.style.width = "794px";
-        target.style.background = "#ffffff";
-        target.style.zIndex = "2147483647";
-        target.style.opacity = "0.01";
-        target.style.pointerEvents = "none";
-        target.style.transform = "none";
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
+
+        captureNode = createPdfCaptureTarget();
         await nextFrame();
-        options.html2canvas.windowWidth = target.scrollWidth || 794;
-        options.html2canvas.windowHeight = target.scrollHeight || 1123;
-        await window.html2pdf().set(options).from(target).save();
+
+        const canvas = await window.html2canvas(captureNode, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          windowWidth: captureNode.scrollWidth || 794,
+          windowHeight: captureNode.scrollHeight || 1123,
+          scrollX: 0,
+          scrollY: 0,
+          logging: false,
+        });
+
+        if (!canvas || canvas.width === 0 || canvas.height === 0) {
+          throw new Error("empty_canvas");
+        }
+
+        buildPdfFromCanvas(canvas, filename);
         refs.pdfInfo.textContent = "PDF 저장 완료: " + startDate + " ~ " + endDate;
       } catch (_error) {
         refs.pdfInfo.textContent = "PDF 저장 중 오류가 발생했습니다.";
         alert("PDF 생성 중 오류가 발생했습니다.");
       } finally {
-        if (prevStyle === null) {
-          target.removeAttribute("style");
-        } else {
-          target.setAttribute("style", prevStyle);
+        if (captureNode && captureNode.parentNode) {
+          captureNode.parentNode.removeChild(captureNode);
         }
       }
     }
