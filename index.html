@@ -76,7 +76,7 @@
     .entry-actions { margin-top:.5rem; display:flex; gap:.4rem; }
     .empty { border:1px dashed #c9c1ad; border-radius:13px; text-align:center; color:#637061; background:#fcf9f1; padding:.95rem; font-size:.89rem; }
     .notice { margin-top:.6rem; font-size:.77rem; color:#66745f; }
-    .pdf-report { position:fixed; left:-9999px; top:0; width:794px; background:#fff; color:#1d2a1f; padding:26px 24px; font-family:"Noto Sans KR",sans-serif; }
+    .pdf-report { position:absolute; left:-10000px; top:0; width:794px; background:#fff; color:#1d2a1f; padding:26px 24px; font-family:"Noto Sans KR",sans-serif; }
     .pdf-report h1 { margin:0 0 8px; font-family:"Gowun Batang",serif; font-size:28px; color:#26462b; }
     .pdf-report .meta { font-size:13px; color:#415645; margin-bottom:14px; }
     .pdf-summary { display:grid; gap:8px; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:14px; }
@@ -105,8 +105,8 @@
           <a href="#pdfExport">기간 PDF</a>
         </div>
       </div>
-      <h1>스마트팜 시설 기준(사이트·존·레벨·배치)으로 영농일지를 관리하세요.</h1>
-      <p>실내/수경 재배 환경값(VPD, CO₂, PPFD, EC, pH)과 작업 내용을 함께 저장합니다. 공유 DB 연결 시 어느 PC에서 입력해도 같은 데이터를 사용합니다.</p>
+      <h1>스마트팜 영농일지를 관리하세요.</h1>
+      <p>실내/수경 재배 환경값과 작업 내용을 함께 저장합니다.</p>
       <section class="stats">
         <article class="stat"><small>총 기록 수</small><strong id="statCount">0건</strong></article>
         <article class="stat"><small>총 지출</small><strong id="statCost">0원</strong></article>
@@ -119,23 +119,16 @@
       <section class="panel">
         <div class="panel-head">
           <h2 id="formTitle">새 영농일지 작성</h2>
-          <div class="hint">필수: 날짜·시설·구획·작물·작업</div>
+          <div class="hint">필수: 날짜·시설·작물·작업</div>
         </div>
         <div class="panel-body">
           <form id="journalForm" class="grid">
             <label class="field col-4"><span>날짜와 시간 📅</span><input id="workDateTime" type="datetime-local" required /></label>
-            <label class="field col-2"><span>근무구분</span><select id="timeBand"><option>주간</option><option>야간</option><option>새벽</option></select></label>
-            <label class="field col-3"><span>시설(사이트) *</span><select id="facilitySite" required></select></label>
-            <label class="field col-3"><span>구획/존 *</span><select id="facilityZone" required></select></label>
-
-            <label class="field col-2"><span>층/레벨</span><select id="facilityLevel"></select></label>
-            <label class="field col-4"><span>트레이/포지션</span><input id="facilityPosition" type="text" placeholder="예: A-2F R3C7 / Tray-12" /></label>
-            <label class="field col-3"><span>배치ID(로트)</span><input id="batchId" type="text" placeholder="예: SPN-2602-01" /></label>
-            <label class="field col-3"><span>작물군 *</span><select id="cropName" required></select></label>
+            <label class="field col-4"><span>시설(사이트) *</span><select id="facilitySite" required></select></label>
+            <label class="field col-4"><span>작물군 *</span><select id="cropName" required></select></label>
 
             <label class="field col-6"><span>품종/제품명</span><input id="varietyName" type="text" placeholder="예: Sweet Spinach / Broccoli" /></label>
-            <label class="field col-3"><span>공정 단계</span><select id="growthStage"></select></label>
-            <label class="field col-3"><span>트레이 수(개)</span><input id="trayCount" type="number" min="0" step="1" placeholder="예: 24" /></label>
+            <label class="field col-6"><span>공정 단계</span><select id="growthStage"></select></label>
 
             <div class="group-title">외부 날씨/기초 정보</div>
             <label class="field col-4"><span>날씨 요약 ☀️🌧️</span><select id="weatherCondition"><option>맑음</option><option>흐림</option><option>비</option><option>눈</option><option>강풍</option></select></label>
@@ -144,7 +137,7 @@
             <label class="field col-6"><span>강수량(mm)</span><input id="rainfall" type="number" step="0.1" placeholder="0" /></label>
             <label class="field col-6"><span>일조량(h)</span><input id="sunshine" type="number" step="0.1" placeholder="6.5" /></label>
 
-            <div class="group-title">재배실 환경(수경/스마트팜)</div>
+            <div class="group-title">재배기 환경(수경/스마트팜)</div>
             <label class="field col-3"><span>실내 온도(°C)</span><input id="airTemperature" type="number" step="0.1" placeholder="22.0" /></label>
             <label class="field col-3"><span>실내 RH(%)</span><input id="relHumidity" type="number" step="0.1" placeholder="70" /></label>
             <label class="field col-3"><span>VPD (kPa)</span><input id="vpd" type="number" step="0.01" placeholder="자동 계산/수기" /></label>
@@ -197,7 +190,7 @@
             <div class="pdf-info" id="pdfInfo">선택한 기간의 영농일지를 PDF로 저장합니다.</div>
           </div>
           <div class="filters">
-            <label class="field"><span>키워드 검색</span><input id="searchInput" type="text" placeholder="시설, 존, 배치ID, 작물, 작업 내용" /></label>
+            <label class="field"><span>키워드 검색</span><input id="searchInput" type="text" placeholder="시설, 작물, 작업 내용" /></label>
             <label class="field"><span>월 필터</span><input id="monthFilter" type="month" /></label>
           </div>
           <div id="entryList" class="list"></div>
@@ -222,15 +215,11 @@
     };
     const FACILITY_DEFAULTS = {
       sites: ["G-Cube V4-2", "G-Cube V4-1", "G-Cube V3", "중산재배기"],
-      zones: ["A", "B"],
-      levels: ["1F", "2F", "3F", "4F"],
       cropTypes: ["시금치", "상추류", "마이크로그린", "기타"],
       stages: ["준비", "파종", "발아/암발아", "육묘", "정식", "재배", "수확", "세척/소독", "점검/보수"],
     };
     const FACILITY_OPTIONS = {
       sites: Array.isArray(CONFIG.facilityOptions?.sites) && CONFIG.facilityOptions.sites.length ? CONFIG.facilityOptions.sites : FACILITY_DEFAULTS.sites,
-      zones: Array.isArray(CONFIG.facilityOptions?.zones) && CONFIG.facilityOptions.zones.length ? CONFIG.facilityOptions.zones : FACILITY_DEFAULTS.zones,
-      levels: Array.isArray(CONFIG.facilityOptions?.levels) && CONFIG.facilityOptions.levels.length ? CONFIG.facilityOptions.levels : FACILITY_DEFAULTS.levels,
       cropTypes: Array.isArray(CONFIG.facilityOptions?.cropTypes) && CONFIG.facilityOptions.cropTypes.length ? CONFIG.facilityOptions.cropTypes : FACILITY_DEFAULTS.cropTypes,
       stages: Array.isArray(CONFIG.facilityOptions?.stages) && CONFIG.facilityOptions.stages.length ? CONFIG.facilityOptions.stages : FACILITY_DEFAULTS.stages,
     };
@@ -238,9 +227,8 @@
     const $ = (id) => document.getElementById(id);
     const refs = {
       form: $("journalForm"), formTitle: $("formTitle"), submitBtn: $("submitBtn"), resetBtn: $("resetBtn"),
-      workDateTime: $("workDateTime"), timeBand: $("timeBand"), cropName: $("cropName"),
-      facilitySite: $("facilitySite"), facilityZone: $("facilityZone"), facilityLevel: $("facilityLevel"), facilityPosition: $("facilityPosition"),
-      batchId: $("batchId"), varietyName: $("varietyName"), growthStage: $("growthStage"), trayCount: $("trayCount"),
+      workDateTime: $("workDateTime"), cropName: $("cropName"),
+      facilitySite: $("facilitySite"), varietyName: $("varietyName"), growthStage: $("growthStage"),
       weatherCondition: $("weatherCondition"), temperature: $("temperature"), rainfall: $("rainfall"), humidity: $("humidity"),
       sunshine: $("sunshine"), airTemperature: $("airTemperature"), relHumidity: $("relHumidity"), vpd: $("vpd"), co2: $("co2"),
       ppfd: $("ppfd"), photoperiod: $("photoperiod"), ec: $("ec"), ph: $("ph"), waterTemperature: $("waterTemperature"),
@@ -314,8 +302,6 @@
 
     function hydrateFacilityOptions() {
       fillSelect(refs.facilitySite, FACILITY_OPTIONS.sites, FACILITY_DEFAULTS.sites);
-      fillSelect(refs.facilityZone, FACILITY_OPTIONS.zones, FACILITY_DEFAULTS.zones);
-      fillSelect(refs.facilityLevel, FACILITY_OPTIONS.levels, FACILITY_DEFAULTS.levels);
       fillSelect(refs.cropName, FACILITY_OPTIONS.cropTypes, FACILITY_DEFAULTS.cropTypes);
       fillSelect(refs.growthStage, FACILITY_OPTIONS.stages, FACILITY_DEFAULTS.stages);
     }
@@ -384,22 +370,14 @@
     function mapRowToEntry(row) {
       const meta = row && typeof row.facility_meta === "object" && row.facility_meta ? row.facility_meta : {};
       const site = meta.site || "";
-      const zone = meta.zone || "";
-      const level = meta.level || "";
       return {
         id: row.id,
         workDateTime: row.work_date_time || "",
-        timeBand: row.time_band || "오전",
         cropName: row.crop_name || "",
-        fieldName: row.field_name || [site, zone, level].filter(Boolean).join(" / "),
+        fieldName: row.field_name || site,
         facilitySite: site,
-        facilityZone: zone,
-        facilityLevel: level,
-        facilityPosition: meta.position || "",
-        batchId: meta.batchId || "",
         varietyName: meta.varietyName || "",
         growthStage: meta.growthStage || "재배",
-        trayCount: meta.trayCount ?? null,
         airTemperature: meta.airTemperature ?? null,
         relHumidity: meta.relHumidity ?? null,
         vpd: meta.vpd ?? null,
@@ -432,24 +410,16 @@
 
     function mapEntryToRow(entry) {
       const site = entry.facilitySite || "";
-      const zone = entry.facilityZone || "";
-      const level = entry.facilityLevel || "";
       return {
         id: entry.id,
         site_id: SHARED.siteId,
         work_date_time: toIsoDateTime(entry.workDateTime),
-        time_band: entry.timeBand,
         crop_name: entry.cropName,
-        field_name: entry.fieldName || [site, zone, level].filter(Boolean).join(" / "),
+        field_name: entry.fieldName || site,
         facility_meta: {
           site,
-          zone,
-          level,
-          position: entry.facilityPosition || "",
-          batchId: entry.batchId || "",
           varietyName: entry.varietyName || "",
           growthStage: entry.growthStage || "",
-          trayCount: entry.trayCount ?? null,
           airTemperature: entry.airTemperature ?? null,
           relHumidity: entry.relHumidity ?? null,
           vpd: entry.vpd ?? null,
@@ -628,8 +598,8 @@
 
     async function submitForm(e) {
       e.preventDefault();
-      if (!refs.workDateTime.value || !refs.facilitySite.value || !refs.facilityZone.value || !refs.cropName.value || !refs.taskDetails.value.trim()) {
-        alert("필수 항목(날짜/시설/구획/작물/작업내용)을 확인해 주세요.");
+      if (!refs.workDateTime.value || !refs.facilitySite.value || !refs.cropName.value || !refs.taskDetails.value.trim()) {
+        alert("필수 항목(날짜/시설/작물/작업내용)을 확인해 주세요.");
         return;
       }
 
@@ -638,11 +608,10 @@
       refs.submitBtn.textContent = editingId ? "수정 저장 중..." : "저장 중...";
 
       const item = {
-        id: editingId || uid(), workDateTime: refs.workDateTime.value, timeBand: refs.timeBand.value, cropName: refs.cropName.value.trim(),
-        fieldName: [refs.facilitySite.value, refs.facilityZone.value, refs.facilityLevel.value].filter(Boolean).join(" / "),
-        facilitySite: refs.facilitySite.value, facilityZone: refs.facilityZone.value, facilityLevel: refs.facilityLevel.value,
-        facilityPosition: refs.facilityPosition.value.trim(), batchId: refs.batchId.value.trim(), varietyName: refs.varietyName.value.trim(),
-        growthStage: refs.growthStage.value, trayCount: n(refs.trayCount.value), airTemperature: n(refs.airTemperature.value),
+        id: editingId || uid(), workDateTime: refs.workDateTime.value, cropName: refs.cropName.value.trim(),
+        fieldName: refs.facilitySite.value,
+        facilitySite: refs.facilitySite.value, varietyName: refs.varietyName.value.trim(),
+        growthStage: refs.growthStage.value, airTemperature: n(refs.airTemperature.value),
         relHumidity: n(refs.relHumidity.value), vpd: n(refs.vpd.value), co2: n(refs.co2.value), ppfd: n(refs.ppfd.value),
         photoperiod: n(refs.photoperiod.value), ec: n(refs.ec.value), ph: n(refs.ph.value), waterTemperature: n(refs.waterTemperature.value),
         dissolvedOxygen: n(refs.dissolvedOxygen.value), weatherCondition: refs.weatherCondition.value, temperature: n(refs.temperature.value),
@@ -696,16 +665,10 @@
       refs.formTitle.textContent = "영농일지 수정";
       refs.submitBtn.textContent = "수정 내용 저장";
       refs.workDateTime.value = toInputDateTime(t.workDateTime);
-      refs.timeBand.value = t.timeBand || "오전";
       refs.cropName.value = t.cropName || "";
       refs.facilitySite.value = t.facilitySite || FACILITY_OPTIONS.sites[0] || "";
-      refs.facilityZone.value = t.facilityZone || FACILITY_OPTIONS.zones[0] || "";
-      refs.facilityLevel.value = t.facilityLevel || FACILITY_OPTIONS.levels[0] || "";
-      refs.facilityPosition.value = t.facilityPosition || "";
-      refs.batchId.value = t.batchId || "";
       refs.varietyName.value = t.varietyName || "";
       refs.growthStage.value = t.growthStage || FACILITY_OPTIONS.stages[0] || "";
-      refs.trayCount.value = iv(t.trayCount);
       refs.weatherCondition.value = t.weatherCondition || "맑음";
       refs.temperature.value = iv(t.temperature);
       refs.rainfall.value = iv(t.rainfall);
@@ -763,8 +726,7 @@
         .sort((a, b) => new Date(b.workDateTime) - new Date(a.workDateTime))
         .filter((e) => {
           const hay = [
-            e.cropName, e.varietyName, e.growthStage, e.fieldName, e.facilitySite, e.facilityZone, e.facilityLevel,
-            e.facilityPosition, e.batchId, e.taskDetails, e.materials, e.specialNotes, e.pestObservation, e.nextPlan, e.cropStatus,
+            e.cropName, e.varietyName, e.growthStage, e.fieldName, e.facilitySite, e.taskDetails, e.materials, e.specialNotes, e.pestObservation, e.nextPlan, e.cropStatus,
           ].join(" ").toLowerCase();
           return (!q || hay.includes(q)) && (!m || (e.workDateTime || "").startsWith(m));
         });
@@ -808,7 +770,7 @@
         t.textContent = (e.cropName || "미지정 작물") + (e.varietyName ? " · " + e.varietyName : "");
         const d = document.createElement("div");
         d.className = "entry-date";
-        d.textContent = dt(e.workDateTime) + " · " + (e.timeBand || "-") + " · " + (e.facilityPosition || "포지션 미기록");
+        d.textContent = dt(e.workDateTime) + " · " + (e.facilitySite || "시설 미기록");
         l.appendChild(t); l.appendChild(d);
 
         const acts = document.createElement("div");
@@ -826,9 +788,7 @@
         const badges = document.createElement("div");
         badges.className = "badges";
         badges.appendChild(chip("시설 " + (e.facilitySite || "-")));
-        badges.appendChild(chip("존 " + (e.facilityZone || "-") + (e.facilityLevel ? " · " + e.facilityLevel : "")));
         badges.appendChild(chip("단계 " + (e.growthStage || "-")));
-        if (e.batchId) badges.appendChild(chip("Batch " + e.batchId));
         if (e.vpd !== null && e.vpd !== undefined && e.vpd !== "") badges.appendChild(chip("VPD " + e.vpd));
         if (e.co2 !== null && e.co2 !== undefined && e.co2 !== "") badges.appendChild(chip("CO₂ " + e.co2));
         if (e.ec !== null && e.ec !== undefined && e.ec !== "") badges.appendChild(chip("EC " + e.ec));
@@ -837,8 +797,7 @@
 
         const g = document.createElement("div");
         g.className = "entry-grid";
-        g.appendChild(block("시설 위치", [e.facilitySite, e.facilityZone, e.facilityLevel, e.facilityPosition].filter(Boolean).join(" / ")));
-        g.appendChild(block("배치/트레이", "Batch " + (e.batchId || "-") + " / Tray " + vd(e.trayCount, "ea")));
+        g.appendChild(block("시설", e.facilitySite || "기록 없음"));
         g.appendChild(
           block(
             "환경 요약",
@@ -893,9 +852,8 @@
       const entryHtml = list.map((item, index) => `
         <article class="pdf-entry">
           <h2>${index + 1}. ${esc(item.cropName || "미지정 작물")}${item.varietyName ? " · " + esc(item.varietyName) : ""}</h2>
-          <p><span class="label">작업 일시:</span> ${esc(dt(item.workDateTime))} (${esc(item.timeBand || "-")})</p>
-          <p><span class="label">시설:</span> ${esc(item.facilitySite || "-")} / ${esc(item.facilityZone || "-")} / ${esc(item.facilityLevel || "-")} / ${esc(item.facilityPosition || "-")}</p>
-          <p><span class="label">배치/단계:</span> Batch ${esc(item.batchId || "-")} / 단계 ${esc(item.growthStage || "-")} / 트레이 ${esc(vd(item.trayCount, "ea"))}</p>
+          <p><span class="label">작업 일시:</span> ${esc(dt(item.workDateTime))}</p>
+          <p><span class="label">시설:</span> ${esc(item.facilitySite || "-")} / 단계 ${esc(item.growthStage || "-")}</p>
           <p><span class="label">날씨:</span> ${esc(item.weatherCondition || "-")} / 기온 ${esc(vd(item.temperature, "°C"))} / 강수 ${esc(vd(item.rainfall, "mm"))} / 습도 ${esc(vd(item.humidity, "%"))} / 일조 ${esc(vd(item.sunshine, "h"))}</p>
           <p><span class="label">환경:</span> 실내온도 ${esc(vd(item.airTemperature, "°C"))} / RH ${esc(vd(item.relHumidity, "%"))} / VPD ${esc(vd(item.vpd, "kPa"))} / CO₂ ${esc(vd(item.co2, "ppm"))} / PPFD ${esc(vd(item.ppfd, ""))}</p>
           <p><span class="label">양액:</span> EC ${esc(vd(item.ec, ""))} / pH ${esc(vd(item.ph, ""))} / 수온 ${esc(vd(item.waterTemperature, "°C"))} / DO ${esc(vd(item.dissolvedOxygen, "mg/L"))} / 광주기 ${esc(vd(item.photoperiod, "h"))}</p>
@@ -921,6 +879,28 @@
         </section>
         ${entryHtml}
       `;
+    }
+
+    function createPdfExportNode() {
+      const exportNode = document.createElement("section");
+      exportNode.className = "pdf-report";
+      exportNode.innerHTML = refs.pdfReport.innerHTML;
+      exportNode.style.position = "fixed";
+      exportNode.style.left = "0";
+      exportNode.style.top = "0";
+      exportNode.style.width = "794px";
+      exportNode.style.background = "#ffffff";
+      exportNode.style.zIndex = "-1";
+      exportNode.style.opacity = "1";
+      exportNode.style.visibility = "visible";
+      exportNode.style.pointerEvents = "none";
+      exportNode.style.transform = "translateY(-250vh)";
+      document.body.appendChild(exportNode);
+      return exportNode;
+    }
+
+    function nextFrame() {
+      return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
 
     async function exportPdf() {
@@ -959,12 +939,19 @@
         pagebreak: { mode: ["css", "legacy"] },
       };
 
+      let exportNode = null;
       try {
-        await window.html2pdf().set(options).from(refs.pdfReport).save();
+        exportNode = createPdfExportNode();
+        await nextFrame();
+        await window.html2pdf().set(options).from(exportNode).save();
         refs.pdfInfo.textContent = "PDF 저장 완료: " + startDate + " ~ " + endDate;
       } catch (_error) {
         refs.pdfInfo.textContent = "PDF 저장 중 오류가 발생했습니다.";
         alert("PDF 생성 중 오류가 발생했습니다.");
+      } finally {
+        if (exportNode && exportNode.parentNode) {
+          exportNode.parentNode.removeChild(exportNode);
+        }
       }
     }
 
