@@ -881,24 +881,6 @@
       `;
     }
 
-    function createPdfExportNode() {
-      const exportNode = document.createElement("section");
-      exportNode.className = "pdf-report";
-      exportNode.innerHTML = refs.pdfReport.innerHTML;
-      exportNode.style.position = "fixed";
-      exportNode.style.left = "0";
-      exportNode.style.top = "0";
-      exportNode.style.width = "794px";
-      exportNode.style.background = "#ffffff";
-      exportNode.style.zIndex = "-1";
-      exportNode.style.opacity = "1";
-      exportNode.style.visibility = "visible";
-      exportNode.style.pointerEvents = "none";
-      exportNode.style.transform = "translateY(-250vh)";
-      document.body.appendChild(exportNode);
-      return exportNode;
-    }
-
     function nextFrame() {
       return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }
@@ -939,18 +921,31 @@
         pagebreak: { mode: ["css", "legacy"] },
       };
 
-      let exportNode = null;
+      const target = refs.pdfReport;
+      const prevStyle = target.getAttribute("style");
       try {
-        exportNode = createPdfExportNode();
+        target.style.position = "fixed";
+        target.style.left = "0";
+        target.style.top = "0";
+        target.style.width = "794px";
+        target.style.background = "#ffffff";
+        target.style.zIndex = "2147483647";
+        target.style.opacity = "0.01";
+        target.style.pointerEvents = "none";
+        target.style.transform = "none";
         await nextFrame();
-        await window.html2pdf().set(options).from(exportNode).save();
+        options.html2canvas.windowWidth = target.scrollWidth || 794;
+        options.html2canvas.windowHeight = target.scrollHeight || 1123;
+        await window.html2pdf().set(options).from(target).save();
         refs.pdfInfo.textContent = "PDF 저장 완료: " + startDate + " ~ " + endDate;
       } catch (_error) {
         refs.pdfInfo.textContent = "PDF 저장 중 오류가 발생했습니다.";
         alert("PDF 생성 중 오류가 발생했습니다.");
       } finally {
-        if (exportNode && exportNode.parentNode) {
-          exportNode.parentNode.removeChild(exportNode);
+        if (prevStyle === null) {
+          target.removeAttribute("style");
+        } else {
+          target.setAttribute("style", prevStyle);
         }
       }
     }
