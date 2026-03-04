@@ -1,0 +1,26 @@
+name: NBA Results Update
+
+on:
+  schedule:
+    # 15:00, 18:00 KST (UTC+9)
+    - cron: "0 6,9 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call update-nba-games endpoint
+        env:
+          ODDS_UPDATE_URL: ${{ secrets.ODDS_UPDATE_URL }}
+        run: |
+          if [ -z "$ODDS_UPDATE_URL" ]; then
+            echo "ODDS_UPDATE_URL secret missing. Skipping."
+            exit 0
+          fi
+          BASE_URL="${ODDS_UPDATE_URL%/api/v1/update-odds}"
+          if [ -z "$BASE_URL" ]; then
+            echo "Failed to derive base URL from ODDS_UPDATE_URL."
+            exit 1
+          fi
+          curl -fsS "$BASE_URL/api/v1/update-nba-games"

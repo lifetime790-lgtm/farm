@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="영농일지 작성, 관리, 기간별 PDF 내보내기를 지원하는 웹사이트" />
+  <title>영농일지 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#f6f1e5; --card:#fffdf7; --line:#d8cfba; --text:#243127; --muted:#687362; --green:#2d6b3b; --green-soft:#e6f2e9; --brown:#b57e2f; --danger:#b44747; --shadow:0 16px 36px rgba(49,71,43,.14); }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Noto Sans KR",sans-serif; color:var(--text); background:radial-gradient(circle at 15% -10%,rgba(74,146,73,.2),transparent 30%),radial-gradient(circle at 84% -8%,rgba(181,126,47,.22),transparent 28%),linear-gradient(130deg,#f8f4e8,#edf5e6 38%,#f8f6ef); min-height:100vh; }
+    .wrap { width:min(1160px,calc(100% - 1.4rem)); margin:1.2rem auto 2rem; }
+    .hero { border:1px solid #c8c4b6; border-radius:24px; background:linear-gradient(120deg,rgba(255,251,242,.96),rgba(238,248,232,.92)); padding:1.6rem; box-shadow:var(--shadow); position:relative; overflow:hidden; animation:up .55s ease; }
+    .hero:after { content:""; position:absolute; width:220px; height:220px; right:-58px; top:-68px; border-radius:50%; background:radial-gradient(circle,rgba(181,126,47,.2),rgba(181,126,47,0)); pointer-events:none; }
+    .hero-top { display:flex; justify-content:space-between; gap:.9rem; align-items:flex-start; }
+    .hero-links { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .hero-links a { text-decoration:none; font-size:.73rem; color:#385238; border:1px solid #d3ccb7; background:#fffaf0; border-radius:999px; padding:.3rem .56rem; }
+    .eyebrow { font-size:.78rem; letter-spacing:.14em; color:var(--green); font-weight:800; text-transform:uppercase; }
+    h1 { margin:.5rem 0; font-family:"Gowun Batang",serif; font-size:clamp(1.7rem,2.9vw,2.7rem); line-height:1.24; }
+    .hero p { margin:0; color:#435240; line-height:1.62; max-width:760px; font-size:.95rem; }
+    .stats { margin-top:1rem; display:grid; gap:.55rem; grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .stat { border:1px solid #d5d0bc; border-radius:14px; padding:.66rem .82rem; background:rgba(255,255,252,.7); }
+    .stat small { display:block; font-size:.72rem; color:var(--muted); }
+    .stat strong { font-size:1.15rem; color:var(--green); }
+    .layout { margin-top:.9rem; display:grid; grid-template-columns:1.08fr .92fr; gap:.85rem; align-items:start; }
+    .panel { border:1px solid #cec8b4; border-radius:18px; background:var(--card); box-shadow:var(--shadow); overflow:hidden; animation:up .7s ease; }
+    .panel-head { display:flex; justify-content:space-between; gap:.6rem; padding:.9rem 1rem; border-bottom:1px solid #e5decb; background:linear-gradient(180deg,rgba(247,255,240,.94),rgba(255,254,249,.95)); }
+    .panel-head h2 { margin:0; font-size:1.02rem; color:#294a2f; }
+    .hint { font-size:.74rem; color:var(--muted); text-align:right; }
+    .panel-body { padding:.9rem 1rem 1rem; }
+    .grid { display:grid; gap:.64rem; grid-template-columns:repeat(12,minmax(0,1fr)); }
+    .field { display:flex; flex-direction:column; gap:.3rem; }
+    .field span { font-size:.77rem; color:#496349; font-weight:700; }
+    .col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-3{grid-column:span 3}
+    input,select,textarea { width:100%; border:1px solid var(--line); border-radius:10px; padding:.6rem .68rem; font:inherit; font-size:.9rem; background:#fff; color:var(--text); }
+    input:focus,select:focus,textarea:focus { outline:none; border-color:rgba(45,107,59,.6); box-shadow:0 0 0 4px rgba(45,107,59,.12); }
+    textarea { min-height:92px; resize:vertical; line-height:1.42; }
+    .subtle { font-size:.74rem; color:var(--muted); }
+    .pills { display:flex; flex-wrap:wrap; gap:.46rem; margin-top:.4rem; }
+    .pill { display:inline-flex; gap:.26rem; align-items:center; border:1px solid #bed0c1; background:var(--green-soft); color:#2c5935; border-radius:999px; padding:.25rem .54rem; font-size:.74rem; }
+    .pill button { border:0; background:transparent; cursor:pointer; color:#2f5a37; font-size:.86rem; padding:0; line-height:1; }
+    .actions { display:flex; gap:.55rem; flex-wrap:wrap; margin-top:.55rem; }
+    button { cursor:pointer; border-radius:10px; border:0; font-size:.86rem; font-weight:700; transition:transform .16s; }
+    button:hover { transform:translateY(-1px); }
+    .btn-main { padding:.67rem .95rem; color:#efffed; background:linear-gradient(120deg,#2f7b45,#255f37); box-shadow:0 8px 18px rgba(35,91,52,.25); }
+    .btn-sub { padding:.67rem .95rem; color:#3d5138; border:1px solid #dcd0b4; background:#f2ebd9; }
+    .btn-mini,.btn-del { padding:.42rem .62rem; font-size:.77rem; border:1px solid #d8cfb8; background:#f8f1e0; color:#40513c; }
+    .btn-del { color:var(--danger); border-color:#ebc8be; background:#fdf2ef; }
+    .btn-export { padding:.58rem .8rem; color:#f1fff0; background:linear-gradient(120deg,#2e7443,#265d38); border:1px solid rgba(255,255,255,.2); }
+    .plan { border:1px solid #ddd4c1; background:#f7f4ea; border-radius:13px; padding:.82rem; min-height:94px; margin-bottom:.72rem; }
+    .plan strong { display:block; font-size:.75rem; letter-spacing:.05em; color:#365b3f; text-transform:uppercase; margin-bottom:.28rem; }
+    .plan p { margin:0; white-space:pre-line; font-size:.88rem; line-height:1.52; color:#354a35; }
+    .pdf-tool { border:1px solid #ddd4c1; background:#fffaf1; border-radius:13px; padding:.82rem; margin-bottom:.72rem; }
+    .pdf-tool strong { display:block; font-size:.75rem; letter-spacing:.05em; color:#385a3e; text-transform:uppercase; margin-bottom:.3rem; }
+    .pdf-row { display:grid; grid-template-columns:1fr 1fr auto; gap:.46rem; align-items:end; }
+    .pdf-info { margin-top:.36rem; font-size:.74rem; color:#596a55; }
+    .filters { display:grid; grid-template-columns:1fr 168px; gap:.55rem; margin-bottom:.68rem; }
+    .list { display:flex; flex-direction:column; gap:.64rem; max-height:920px; overflow:auto; padding-right:.12rem; }
+    .entry { border:1px solid #ddd3be; border-radius:14px; background:#fffef9; box-shadow:0 8px 16px rgba(97,89,70,.08); padding:.76rem; animation:pop .3s ease; }
+    .entry-top { display:flex; justify-content:space-between; gap:.5rem; align-items:flex-start; margin-bottom:.48rem; }
+    .entry-title { margin:0; font-size:.98rem; color:#2d4b2f; }
+    .entry-date { margin-top:.1rem; font-size:.78rem; color:#576b56; }
+    .badges { display:flex; gap:.33rem; flex-wrap:wrap; margin-bottom:.46rem; }
+    .badge { font-size:.7rem; border:1px solid #d4dcc8; background:#f2f6e8; border-radius:999px; color:#476247; padding:.2rem .49rem; }
+    .entry-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.42rem .66rem; margin-bottom:.42rem; }
+    .entry-block small { display:block; font-size:.67rem; color:#687360; letter-spacing:.07em; text-transform:uppercase; margin-bottom:.06rem; }
+    .entry-block p { margin:0; font-size:.83rem; line-height:1.43; white-space:pre-line; color:#334333; }
+    .finance { display:flex; flex-wrap:wrap; gap:.34rem; margin-top:.2rem; }
+    .finance span { font-size:.74rem; border-radius:999px; border:1px solid #d9d0ba; background:#fef9ee; padding:.21rem .48rem; }
+    .photos { margin-top:.43rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(86px,1fr)); gap:.4rem; }
+    .photos img { width:100%; height:76px; object-fit:cover; border-radius:9px; border:1px solid #d9d1bd; background:#f3efdf; }
+    .entry-actions { margin-top:.5rem; display:flex; gap:.4rem; }
+    .empty { border:1px dashed #c9c1ad; border-radius:13px; text-align:center; color:#637061; background:#fcf9f1; padding:.95rem; font-size:.89rem; }
+    .notice { margin-top:.6rem; font-size:.77rem; color:#66745f; }
+    .pdf-report { position:fixed; left:-9999px; top:0; width:794px; background:#fff; color:#1d2a1f; padding:26px 24px; font-family:"Noto Sans KR",sans-serif; }
+    .pdf-report h1 { margin:0 0 8px; font-family:"Gowun Batang",serif; font-size:28px; color:#26462b; }
+    .pdf-report .meta { font-size:13px; color:#415645; margin-bottom:14px; }
+    .pdf-summary { display:grid; gap:8px; grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:14px; }
+    .pdf-box { border:1px solid #d7d0bb; border-radius:10px; background:#faf7ee; padding:8px 10px; }
+    .pdf-box small { display:block; font-size:11px; color:#5b6856; margin-bottom:3px; }
+    .pdf-box strong { font-size:14px; color:#2a4a2f; }
+    .pdf-entry { border:1px solid #d8d0ba; border-radius:10px; background:#fffdf6; padding:10px; margin-bottom:10px; page-break-inside:avoid; break-inside:avoid; }
+    .pdf-entry h2 { margin:0 0 6px; font-size:16px; color:#2b4a2f; }
+    .pdf-entry p { margin:2px 0; font-size:12px; line-height:1.45; white-space:pre-line; }
+    .pdf-entry .label { font-weight:700; color:#435742; }
+    @media (max-width:860px){ .hero-top{flex-direction:column} .pdf-row{grid-template-columns:1fr} }
+    @media (max-width:1020px){ .layout{grid-template-columns:1fr} .list{max-height:none} }
+    @media (max-width:740px){ .stats{grid-template-columns:repeat(2,minmax(0,1fr))} .filters{grid-template-columns:1fr} .entry-grid{grid-template-columns:1fr} .col-8,.col-6,.col-4,.col-3{grid-column:span 12} }
+    @keyframes up { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pop { from { opacity:0; transform:scale(.986) translateY(6px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="hero-top">
+        <div class="eyebrow">Farm Journal Studio</div>
+        <div class="hero-links">
+          <a href="#journalForm">일지 작성</a>
+          <a href="#entryList">기록 확인</a>
+          <a href="#pdfExport">기간 PDF</a>
+        </div>
+      </div>
+      <h1>영농일지를 빠르게 기록하고 다음 작업까지 이어가세요.</h1>
+      <p>날짜·날씨·작업·비용·병해충·다음 계획을 한 화면에서 관리합니다. 데이터는 브라우저 localStorage에 저장되며, 원하는 기간으로 PDF 리포트 생성이 가능합니다.</p>
+      <section class="stats">
+        <article class="stat"><small>총 기록 수</small><strong id="statCount">0건</strong></article>
+        <article class="stat"><small>총 지출</small><strong id="statCost">0원</strong></article>
+        <article class="stat"><small>총 수입</small><strong id="statRevenue">0원</strong></article>
+        <article class="stat"><small>손익</small><strong id="statBalance">0원</strong></article>
+      </section>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2 id="formTitle">새 영농일지 작성</h2>
+          <div class="hint">필수: 날짜·시간, 작업 내용</div>
+        </div>
+        <div class="panel-body">
+          <form id="journalForm" class="grid">
+            <label class="field col-6"><span>날짜와 시간 📅</span><input id="workDateTime" type="datetime-local" required /></label>
+            <label class="field col-6"><span>시간대</span><select id="timeBand"><option>새벽</option><option>오전</option><option>오후</option><option>저녁</option></select></label>
+            <label class="field col-4"><span>작물명</span><input id="cropName" type="text" placeholder="예: 상추, 토마토" /></label>
+            <label class="field col-4"><span>구역/포장</span><input id="fieldName" type="text" placeholder="예: A-2 하우스" /></label>
+            <label class="field col-4"><span>날씨 요약 ☀️🌧️</span><select id="weatherCondition"><option>맑음</option><option>흐림</option><option>비</option><option>눈</option><option>강풍</option></select></label>
+            <label class="field col-3"><span>기온(°C)</span><input id="temperature" type="number" step="0.1" placeholder="19.5" /></label>
+            <label class="field col-3"><span>강수량(mm)</span><input id="rainfall" type="number" step="0.1" placeholder="0" /></label>
+            <label class="field col-3"><span>습도(%)</span><input id="humidity" type="number" step="1" placeholder="60" /></label>
+            <label class="field col-3"><span>일조량(h)</span><input id="sunshine" type="number" step="0.1" placeholder="6.5" /></label>
+            <label class="field col-12"><span>작업 내용 🛠️</span><textarea id="taskDetails" required placeholder="파종, 시비, 제초, 수확 등 상세 작업 내용"></textarea></label>
+            <label class="field col-12"><span>투입 자재 💊</span><textarea id="materials" placeholder="비료/농약/퇴비 종류와 양"></textarea></label>
+            <label class="field col-12"><span>작물 상태 🌱</span><textarea id="cropStatus" placeholder="생육 상태, 색상 변화, 활력"></textarea></label>
+            <label class="field col-12">
+              <span>작물 사진 첨부</span>
+              <input id="photos" type="file" accept="image/*" multiple />
+              <div class="subtle">최대 4장까지 첨부 가능</div>
+              <div id="photoPills" class="pills"></div>
+            </label>
+            <label class="field col-6"><span>인력 투입 👨‍🌾👩‍🌾 - 인원(명)</span><input id="laborPeople" type="number" step="1" min="0" placeholder="2" /></label>
+            <label class="field col-6"><span>인력 투입 시간(시간)</span><input id="laborHours" type="number" step="0.5" min="0" placeholder="5.5" /></label>
+            <label class="field col-12"><span>특이사항 ⚠️</span><textarea id="specialNotes" placeholder="예상치 못한 상황, 이벤트"></textarea></label>
+            <label class="field col-6"><span>비용(원) 💰</span><input id="cost" type="number" step="1" min="0" placeholder="45000" /></label>
+            <label class="field col-6"><span>수익(원) 💰</span><input id="revenue" type="number" step="1" min="0" placeholder="120000" /></label>
+            <label class="field col-12"><span>병해충 관찰 🐛</span><textarea id="pestObservation" placeholder="종류, 발생 위치, 대응 방법"></textarea></label>
+            <label class="field col-12"><span>다음 계획 📋</span><textarea id="nextPlan" placeholder="다음 작업 일정과 준비 사항"></textarea></label>
+            <div class="col-12 actions">
+              <button type="submit" class="btn-main" id="submitBtn">기록 저장</button>
+              <button type="button" class="btn-sub" id="resetBtn">작성 초기화</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>기록 타임라인</h2>
+          <div class="hint">검색 + 월 필터</div>
+        </div>
+        <div class="panel-body">
+          <div class="plan"><strong>가장 최근의 다음 계획</strong><p id="planPreview">아직 저장된 계획이 없습니다. 첫 영농일지를 작성해 보세요.</p></div>
+          <div class="pdf-tool" id="pdfExport">
+            <strong>기간별 PDF 내보내기</strong>
+            <div class="pdf-row">
+              <label class="field"><span>시작일</span><input id="pdfStart" type="date" /></label>
+              <label class="field"><span>종료일</span><input id="pdfEnd" type="date" /></label>
+              <button type="button" class="btn-export" id="exportPdfBtn">PDF 저장</button>
+            </div>
+            <div class="pdf-info" id="pdfInfo">선택한 기간의 영농일지를 PDF로 저장합니다.</div>
+          </div>
+          <div class="filters">
+            <label class="field"><span>키워드 검색</span><input id="searchInput" type="text" placeholder="작물명, 작업 내용, 특이사항" /></label>
+            <label class="field"><span>월 필터</span><input id="monthFilter" type="month" /></label>
+          </div>
+          <div id="entryList" class="list"></div>
+          <div class="notice">데이터 저장 위치: 현재 브라우저(localStorage)</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <section id="pdfReport" class="pdf-report" aria-hidden="true"></section>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    const KEY = "farm-journal-entries-v1";
+    const MAX = 4;
+    const $ = (id) => document.getElementById(id);
+    const refs = {
+      form: $("journalForm"), formTitle: $("formTitle"), submitBtn: $("submitBtn"), resetBtn: $("resetBtn"),
+      workDateTime: $("workDateTime"), timeBand: $("timeBand"), cropName: $("cropName"), fieldName: $("fieldName"),
+      weatherCondition: $("weatherCondition"), temperature: $("temperature"), rainfall: $("rainfall"), humidity: $("humidity"),
+      sunshine: $("sunshine"), taskDetails: $("taskDetails"), materials: $("materials"), cropStatus: $("cropStatus"),
+      laborPeople: $("laborPeople"), laborHours: $("laborHours"), specialNotes: $("specialNotes"), cost: $("cost"), revenue: $("revenue"),
+      pestObservation: $("pestObservation"), nextPlan: $("nextPlan"), photoInput: $("photos"), photoPills: $("photoPills"),
+      entryList: $("entryList"), searchInput: $("searchInput"), monthFilter: $("monthFilter"), planPreview: $("planPreview"),
+      statCount: $("statCount"), statCost: $("statCost"), statRevenue: $("statRevenue"), statBalance: $("statBalance"),
+      pdfStart: $("pdfStart"), pdfEnd: $("pdfEnd"), exportPdfBtn: $("exportPdfBtn"), pdfInfo: $("pdfInfo"), pdfReport: $("pdfReport"),
+    };
+
+    let entries = load();
+    let editingId = null;
+    let photos = [];
+
+    refs.form.addEventListener("submit", submitForm);
+    refs.resetBtn.addEventListener("click", clearForm);
+    refs.photoInput.addEventListener("change", onPhoto);
+    refs.searchInput.addEventListener("input", renderEntries);
+    refs.monthFilter.addEventListener("change", renderEntries);
+    refs.exportPdfBtn.addEventListener("click", exportPdf);
+    initPdfRange();
+    renderAll();
+
+    function load() { try { const raw = localStorage.getItem(KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; } catch { return []; } }
+    function save() { localStorage.setItem(KEY, JSON.stringify(entries)); }
+    function n(v) { if (v === "" || v === null || typeof v === "undefined") return null; const num = Number(v); return Number.isFinite(num) ? num : null; }
+    function money(v) { return Number(v || 0).toLocaleString("ko-KR") + "원"; }
+    function dt(v) { const d = new Date(v); return Number.isNaN(d.getTime()) ? (v || "시간 미기록") : new Intl.DateTimeFormat("ko-KR",{dateStyle:"medium",timeStyle:"short"}).format(d); }
+    function uid() { return window.crypto && window.crypto.randomUUID ? window.crypto.randomUUID() : "id-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7); }
+    function iv(v) { return v === null || typeof v === "undefined" ? "" : String(v); }
+    function vd(v, s) { return v === null || typeof v === "undefined" || v === "" ? "-" : String(v) + s; }
+    function day(v, t) { return new Date(v + "T" + t); }
+    function esc(v) { return String(v || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+
+    function initPdfRange() {
+      const today = new Date();
+      const y = today.getFullYear();
+      const m = String(today.getMonth() + 1).padStart(2, "0");
+      const d = String(today.getDate()).padStart(2, "0");
+      refs.pdfStart.value = y + "-" + m + "-01";
+      refs.pdfEnd.value = y + "-" + m + "-" + d;
+    }
+
+    function rangeEntries(startDate, endDate) {
+      const s = day(startDate, "00:00:00");
+      const e = day(endDate, "23:59:59");
+      return entries
+        .slice()
+        .sort((a, b) => new Date(a.workDateTime) - new Date(b.workDateTime))
+        .filter((item) => {
+          const at = new Date(item.workDateTime);
+          return !Number.isNaN(at.getTime()) && at >= s && at <= e;
+        });
+    }
+
+    function fileToData(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    function onPhoto(e) {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+      const remain = Math.max(0, MAX - photos.length);
+      if (remain === 0) { alert("사진은 최대 " + MAX + "장입니다."); refs.photoInput.value = ""; return; }
+      Promise.all(files.slice(0, remain).map(fileToData))
+        .then((urls) => { photos = photos.concat(urls).slice(0, MAX); renderPhotoPills(); })
+        .catch(() => alert("사진을 읽지 못했습니다."))
+        .finally(() => { refs.photoInput.value = ""; });
+    }
+
+    function renderPhotoPills() {
+      refs.photoPills.innerHTML = "";
+      photos.forEach((_, i) => {
+        const pill = document.createElement("div");
+        pill.className = "pill";
+        pill.textContent = "사진 " + (i + 1);
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = "x";
+        b.setAttribute("aria-label", "사진 삭제");
+        b.addEventListener("click", () => { photos.splice(i, 1); renderPhotoPills(); });
+        pill.appendChild(b);
+        refs.photoPills.appendChild(pill);
+      });
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      if (!refs.workDateTime.value || !refs.taskDetails.value.trim()) { alert("날짜/시간과 작업 내용은 필수입니다."); return; }
+      const item = {
+        id: editingId || uid(), workDateTime: refs.workDateTime.value, timeBand: refs.timeBand.value, cropName: refs.cropName.value.trim(),
+        fieldName: refs.fieldName.value.trim(), weatherCondition: refs.weatherCondition.value, temperature: n(refs.temperature.value),
+        rainfall: n(refs.rainfall.value), humidity: n(refs.humidity.value), sunshine: n(refs.sunshine.value), taskDetails: refs.taskDetails.value.trim(),
+        materials: refs.materials.value.trim(), cropStatus: refs.cropStatus.value.trim(), laborPeople: n(refs.laborPeople.value),
+        laborHours: n(refs.laborHours.value), specialNotes: refs.specialNotes.value.trim(), cost: n(refs.cost.value) || 0, revenue: n(refs.revenue.value) || 0,
+        pestObservation: refs.pestObservation.value.trim(), nextPlan: refs.nextPlan.value.trim(), photos: photos.slice(), savedAt: new Date().toISOString(),
+      };
+      if (editingId) entries = entries.map((x) => (x.id === editingId ? item : x)); else entries.unshift(item);
+      save(); clearForm(); renderAll();
+    }
+
+    function clearForm() {
+      refs.form.reset();
+      editingId = null;
+      photos = [];
+      refs.formTitle.textContent = "새 영농일지 작성";
+      refs.submitBtn.textContent = "기록 저장";
+      renderPhotoPills();
+      refs.workDateTime.value = "";
+      refs.taskDetails.value = "";
+    }
+
+    function editEntry(id) {
+      const t = entries.find((x) => x.id === id);
+      if (!t) return;
+      editingId = id;
+      refs.formTitle.textContent = "영농일지 수정";
+      refs.submitBtn.textContent = "수정 내용 저장";
+      refs.workDateTime.value = t.workDateTime || "";
+      refs.timeBand.value = t.timeBand || "오전";
+      refs.cropName.value = t.cropName || "";
+      refs.fieldName.value = t.fieldName || "";
+      refs.weatherCondition.value = t.weatherCondition || "맑음";
+      refs.temperature.value = iv(t.temperature);
+      refs.rainfall.value = iv(t.rainfall);
+      refs.humidity.value = iv(t.humidity);
+      refs.sunshine.value = iv(t.sunshine);
+      refs.taskDetails.value = t.taskDetails || "";
+      refs.materials.value = t.materials || "";
+      refs.cropStatus.value = t.cropStatus || "";
+      refs.laborPeople.value = iv(t.laborPeople);
+      refs.laborHours.value = iv(t.laborHours);
+      refs.specialNotes.value = t.specialNotes || "";
+      refs.cost.value = iv(t.cost);
+      refs.revenue.value = iv(t.revenue);
+      refs.pestObservation.value = t.pestObservation || "";
+      refs.nextPlan.value = t.nextPlan || "";
+      photos = Array.isArray(t.photos) ? t.photos.slice(0, MAX) : [];
+      renderPhotoPills();
+      scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function delEntry(id) {
+      if (!confirm("이 기록을 삭제할까요?")) return;
+      entries = entries.filter((x) => x.id !== id);
+      save();
+      if (editingId === id) clearForm();
+      renderAll();
+    }
+
+    function filtered() {
+      const q = refs.searchInput.value.trim().toLowerCase();
+      const m = refs.monthFilter.value;
+      return entries
+        .slice()
+        .sort((a, b) => new Date(b.workDateTime) - new Date(a.workDateTime))
+        .filter((e) => {
+          const hay = [e.cropName, e.fieldName, e.taskDetails, e.materials, e.specialNotes, e.pestObservation, e.nextPlan, e.cropStatus].join(" ").toLowerCase();
+          return (!q || hay.includes(q)) && (!m || (e.workDateTime || "").startsWith(m));
+        });
+    }
+
+    function block(label, value) {
+      const w = document.createElement("div");
+      w.className = "entry-block";
+      const s = document.createElement("small");
+      s.textContent = label;
+      const p = document.createElement("p");
+      p.textContent = value && String(value).trim() ? String(value) : "기록 없음";
+      w.appendChild(s);
+      w.appendChild(p);
+      return w;
+    }
+
+    function chip(t) { const x = document.createElement("span"); x.className = "badge"; x.textContent = t; return x; }
+    function cash(t) { const x = document.createElement("span"); x.textContent = t; return x; }
+
+    function renderEntries() {
+      const list = filtered();
+      refs.entryList.innerHTML = "";
+      if (!list.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "조건에 맞는 기록이 없습니다. 새 일지를 작성해 보세요.";
+        refs.entryList.appendChild(empty);
+        return;
+      }
+
+      list.forEach((e) => {
+        const c = document.createElement("article");
+        c.className = "entry";
+
+        const top = document.createElement("div");
+        top.className = "entry-top";
+        const l = document.createElement("div");
+        const t = document.createElement("h3");
+        t.className = "entry-title";
+        t.textContent = (e.cropName || "미지정 작물") + " · " + (e.fieldName || "구역 미지정");
+        const d = document.createElement("div");
+        d.className = "entry-date";
+        d.textContent = dt(e.workDateTime) + " (" + (e.timeBand || "-") + ")";
+        l.appendChild(t); l.appendChild(d);
+
+        const acts = document.createElement("div");
+        acts.className = "entry-actions";
+        const eb = document.createElement("button");
+        eb.type = "button"; eb.className = "btn-mini"; eb.textContent = "수정";
+        eb.addEventListener("click", () => editEntry(e.id));
+        const db = document.createElement("button");
+        db.type = "button"; db.className = "btn-del"; db.textContent = "삭제";
+        db.addEventListener("click", () => delEntry(e.id));
+        acts.appendChild(eb); acts.appendChild(db);
+        top.appendChild(l); top.appendChild(acts);
+        c.appendChild(top);
+
+        const badges = document.createElement("div");
+        badges.className = "badges";
+        badges.appendChild(chip("날씨 " + (e.weatherCondition || "-")));
+        badges.appendChild(chip("기온 " + vd(e.temperature, "°C")));
+        badges.appendChild(chip("강수 " + vd(e.rainfall, "mm")));
+        badges.appendChild(chip("습도 " + vd(e.humidity, "%")));
+        badges.appendChild(chip("일조 " + vd(e.sunshine, "h")));
+        c.appendChild(badges);
+
+        const g = document.createElement("div");
+        g.className = "entry-grid";
+        g.appendChild(block("작업 내용", e.taskDetails));
+        g.appendChild(block("투입 자재", e.materials));
+        g.appendChild(block("작물 상태", e.cropStatus));
+        g.appendChild(block("인력 투입", "인원 " + vd(e.laborPeople, "명") + " / 시간 " + vd(e.laborHours, "h")));
+        g.appendChild(block("특이사항", e.specialNotes));
+        g.appendChild(block("병해충 관찰", e.pestObservation));
+        g.appendChild(block("다음 계획", e.nextPlan));
+        c.appendChild(g);
+
+        const f = document.createElement("div");
+        f.className = "finance";
+        const cost = Number(e.cost || 0), rev = Number(e.revenue || 0), p = rev - cost;
+        f.appendChild(cash("지출 " + money(cost)));
+        f.appendChild(cash("수입 " + money(rev)));
+        f.appendChild(cash("손익 " + money(p)));
+        c.appendChild(f);
+
+        if (Array.isArray(e.photos) && e.photos.length) {
+          const row = document.createElement("div");
+          row.className = "photos";
+          e.photos.forEach((src) => {
+            const img = document.createElement("img");
+            img.src = src;
+            img.alt = "작물 사진";
+            row.appendChild(img);
+          });
+          c.appendChild(row);
+        }
+        refs.entryList.appendChild(c);
+      });
+    }
+
+    function buildPdfReport(list, startDate, endDate) {
+      const totalCost = list.reduce((a, x) => a + Number(x.cost || 0), 0);
+      const totalRevenue = list.reduce((a, x) => a + Number(x.revenue || 0), 0);
+      const totalBalance = totalRevenue - totalCost;
+
+      const entryHtml = list.map((item, index) => `
+        <article class="pdf-entry">
+          <h2>${index + 1}. ${esc(item.cropName || "미지정 작물")} · ${esc(item.fieldName || "구역 미지정")}</h2>
+          <p><span class="label">작업 일시:</span> ${esc(dt(item.workDateTime))} (${esc(item.timeBand || "-")})</p>
+          <p><span class="label">날씨:</span> ${esc(item.weatherCondition || "-")} / 기온 ${esc(vd(item.temperature, "°C"))} / 강수 ${esc(vd(item.rainfall, "mm"))} / 습도 ${esc(vd(item.humidity, "%"))} / 일조 ${esc(vd(item.sunshine, "h"))}</p>
+          <p><span class="label">작업 내용:</span> ${esc(item.taskDetails || "기록 없음")}</p>
+          <p><span class="label">투입 자재:</span> ${esc(item.materials || "기록 없음")}</p>
+          <p><span class="label">작물 상태:</span> ${esc(item.cropStatus || "기록 없음")}</p>
+          <p><span class="label">인력 투입:</span> 인원 ${esc(vd(item.laborPeople, "명"))} / 시간 ${esc(vd(item.laborHours, "h"))}</p>
+          <p><span class="label">특이사항:</span> ${esc(item.specialNotes || "기록 없음")}</p>
+          <p><span class="label">병해충 관찰:</span> ${esc(item.pestObservation || "기록 없음")}</p>
+          <p><span class="label">다음 계획:</span> ${esc(item.nextPlan || "기록 없음")}</p>
+          <p><span class="label">비용/수익:</span> 지출 ${esc(money(item.cost || 0))} / 수입 ${esc(money(item.revenue || 0))} / 손익 ${esc(money((item.revenue || 0) - (item.cost || 0)))}</p>
+        </article>
+      `).join("");
+
+      refs.pdfReport.innerHTML = `
+        <h1>영농일지 기간 리포트</h1>
+        <div class="meta">기간: ${esc(startDate)} ~ ${esc(endDate)} / 출력일시: ${esc(dt(new Date().toISOString()))}</div>
+        <section class="pdf-summary">
+          <article class="pdf-box"><small>기록 수</small><strong>${esc(String(list.length))}건</strong></article>
+          <article class="pdf-box"><small>총 지출</small><strong>${esc(money(totalCost))}</strong></article>
+          <article class="pdf-box"><small>총 수입</small><strong>${esc(money(totalRevenue))}</strong></article>
+          <article class="pdf-box"><small>손익</small><strong>${esc(money(totalBalance))}</strong></article>
+        </section>
+        ${entryHtml}
+      `;
+    }
+
+    async function exportPdf() {
+      const startDate = refs.pdfStart.value;
+      const endDate = refs.pdfEnd.value;
+
+      if (!startDate || !endDate) {
+        alert("PDF 기간의 시작일과 종료일을 모두 선택해 주세요.");
+        return;
+      }
+      if (startDate > endDate) {
+        alert("종료일은 시작일보다 빠를 수 없습니다.");
+        return;
+      }
+      if (typeof window.html2pdf === "undefined") {
+        alert("PDF 엔진을 불러오지 못했습니다. 네트워크를 확인해 주세요.");
+        return;
+      }
+
+      const list = rangeEntries(startDate, endDate);
+      if (!list.length) {
+        alert("선택한 기간에 해당하는 기록이 없습니다.");
+        return;
+      }
+
+      refs.pdfInfo.textContent = "PDF 생성 중입니다. 잠시만 기다려 주세요.";
+      buildPdfReport(list, startDate, endDate);
+
+      const filename = "farm-journal-" + startDate + "-to-" + endDate + ".pdf";
+      const options = {
+        filename,
+        margin: [6, 6, 6, 6],
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"] },
+      };
+
+      try {
+        await window.html2pdf().set(options).from(refs.pdfReport).save();
+        refs.pdfInfo.textContent = "PDF 저장 완료: " + startDate + " ~ " + endDate;
+      } catch (_error) {
+        refs.pdfInfo.textContent = "PDF 저장 중 오류가 발생했습니다.";
+        alert("PDF 생성 중 오류가 발생했습니다.");
+      }
+    }
+
+    function renderStats() {
+      const tc = entries.reduce((a, x) => a + Number(x.cost || 0), 0);
+      const tr = entries.reduce((a, x) => a + Number(x.revenue || 0), 0);
+      const b = tr - tc;
+      refs.statCount.textContent = entries.length.toLocaleString("ko-KR") + "건";
+      refs.statCost.textContent = money(tc);
+      refs.statRevenue.textContent = money(tr);
+      refs.statBalance.textContent = money(b);
+      refs.statBalance.style.color = b >= 0 ? "var(--green)" : "var(--danger)";
+    }
+
+    function renderPlan() {
+      const recent = entries.slice().sort((a, b) => new Date(b.workDateTime) - new Date(a.workDateTime)).find((x) => x.nextPlan && x.nextPlan.trim());
+      refs.planPreview.textContent = recent ? dt(recent.workDateTime) + "\n" + recent.nextPlan.trim() : "아직 저장된 계획이 없습니다. 첫 영농일지를 작성해 보세요.";
+    }
+
+    function renderAll() { renderPhotoPills(); renderStats(); renderPlan(); renderEntries(); }
+  </script>
+</body>
+</html>
